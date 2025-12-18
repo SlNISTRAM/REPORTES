@@ -1,0 +1,87 @@
+/* ===== Print Styles ===== */
+
+@media print {
+    /* Hide non-printable elements */
+    .app-header,
+    .form-container,
+    .form-actions,
+    .form-actions-top,
+    .btn-close,
+    .preview-header,
+    button {
+        display: none !important;
+    }
+
+    /* Reset page */
+    body {
+        background: white;
+        margin: 0;
+        padding: 0;
+    }
+
+    .preview-container {
+        box-shadow: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    .preview-content {
+        border: none;
+        padding: 0;
+        background: white;
+    }
+
+    .report {
+        max-width: 100%;
+        padding: 20mm;
+    }
+
+    /* Page breaks */
+    .report-section {
+        page-break-inside: avoid;
+    }
+
+    .report-table {
+        page-break-inside: auto;
+    }
+
+    .report-table tr {
+        page-break-inside: avoid;
+        page-break-after: auto;
+    }
+
+    /* Ensure colors print */
+    * {
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+
+    /* Optimize fonts for print */
+    body {
+        font-size: 11pt;
+        line-height: 1.4;
+    }
+
+    h1 {
+        font-size: 20pt;
+    }
+
+    h2 {
+        font-size: 16pt;
+    }
+
+    h3 {
+        font-size: 14pt;
+    }
+
+    /* Links */
+    a {
+        text-decoration: none;
+        color: inherit;
+    }
+
+    /* Signature area */
+    .signature-area {
+        page-break-inside: avoid;
+    }
+}

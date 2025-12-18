@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Informe Técnico HI98130 - TECFRESH</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Roboto:wght@300;400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/variables.css">
+    <link rel="stylesheet" href="css/base.css">
+    <link rel="stylesheet" href="css/components.css">
+    <link rel="stylesheet" href="css/print.css" media="print">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <header class="app-header">
+            <div class="header-content">
+                <h1>📋 Informe Técnico - HI98130</h1>
+                <p class="subtitle">Evaluación y calibración de equipo medidor de pH/EC/Temp</p>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Form Section -->
+            <section class="form-container">
+                <div class="form-header">
+                    <h2>Datos del Informe</h2>
+                    <div class="form-actions-top">
+                        <button type="button" class="btn-secondary" id="loadDraftBtn">
+                            📂 Cargar Borrador
+                        </button>
+                        <button type="button" class="btn-secondary" id="clearFormBtn">
+                            🗑️ Limpiar
+                        </button>
+                    </div>
+                </div>
+
+                <form id="reportForm">
+                    <!-- Sección 1: Encabezado del Informe -->
+                    <div class="form-section">
+                        <h3 class="section-title">1. Encabezado del Informe</h3>
+                        <div class="form-grid">
+                            <div class="input-group">
+                                <label for="reportNumber">Número de Informe *</label>
+                                <input type="text" id="reportNumber" name="reportNumber" 
+                                       placeholder="Ej: INF-2024-001" required>
+                            </div>
+                            <div class="input-group">
+                                <label for="reportDate">Fecha *</label>
+                                <input type="date" id="reportDate" name="reportDate" required>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Sección 2: Datos del Cliente -->
+                    <div class="form-section">
+                        <h3 class="section-title">2. Datos del Cliente</h3>
+                        <div class="form-grid">
+                            <div class="input-group full-width">
+                                <label for="businessName">Razón Social *</label>
+                                <input type="text" id="businessName" name="businessName" 
+                                       placeholder="Nombre de la empresa" required>
+                            </div>
+                            <div class="input-group">
+                                <label for="ruc">RUC *</label>
+                                <input type="text" id="ruc" name="ruc" 
+                                       placeholder="12345678901" pattern="\d{11}" 
+                                       maxlength="11" required>
+                                <small>11 dígitos</small>
+                            </div>
+                            <div class="input-group">
+                                <label for="phone">Teléfono</label>
+                                <input type="tel" id="phone" name="phone" 
+                                       placeholder="999 999 999">
+                            </div>
+                            <div class="input-group full-width">
+                                <label for="address">Dirección *</label>
+                                <input type="text" id="address" name="address" 
+                                       placeholder="Dirección completa" required>
+                            </div>
+                            <div class="input-group">
+                                <label for="contactName">Solicitante *</label>
+                                <input type="text" id="contactName" name="contactName" 
+                                       placeholder="Nombre del contacto" required>
+                            </div>
+                            <div class="input-group">
+                                <label for="email">Correo Electrónico *</label>
+                                <input type="email" id="email" name="email" 
+                                       placeholder="contacto@empresa.com" required>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Sección 3: Equipos (Múltiples) -->
+                    <div class="form-section">
+                        <div class="section-header-with-actions">
+                            <h3 class="section-title">3. Equipos Evaluados</h3>
+                            <button type="button" class="btn-secondary btn-add" id="addEquipmentBtn">
+                                ➕ Agregar Equipo
+                            </button>
+                        </div>
+                        
+                        <div id="equipmentsContainer">
+                            <!-- Equipment entries will be added here dynamically -->
+                        </div>
+                    </div>
+
+                    <!-- Sección 4: Técnico Responsable -->
+                    <div class="form-section">
+                        <h3 class="section-title">7. Técnico Responsable</h3>
+                        <div class="input-group">
+                            <label for="technician">Nombre del Técnico *</label>
+                            <input type="text" id="technician" name="technician" 
+                                   placeholder="Nombre completo del técnico" required>
+                        </div>
+                    </div>
+
+                    <!-- Sección 10: Presupuesto -->
+                    <div class="form-section">
+                        <h3 class="section-title">8. Presupuesto</h3>
+                        
+                        <p class="info-note">
+                            <strong>Nota:</strong> Los precios ingresados deben incluir IGV (18%). 
+                            El sistema calculará automáticamente el IGV implícito y el subtotal.
+                        </p>
+                        
+                        <div id="budgetItems">
+                            <!-- Budget items will be added dynamically -->
+                        </div>
+
+                        <button type="button" class="btn-secondary btn-add" id="addBudgetItemBtn">
+                            ➕ Agregar Ítem
+                        </button>
+
+                        <div class="budget-summary">
+                            <div class="summary-row">
+                                <span>Total (inc. IGV):</span>
+                                <span id="totalDisplay">S/ 0.00</span>
+                            </div>
+                            <div class="summary-row">
+                                <span>IGV (18%):</span>
+                                <span id="igvDisplay">S/ 0.00</span>
+                            </div>
+                            <div class="summary-row total">
+                                <span>Subtotal:</span>
+                                <span id="subtotalDisplay">S/ 0.00</span>
+                            </div>
+                        </div>
+
+                        <div class="input-group">
+                            <label>
+                                <input type="checkbox" id="warranty" name="warranty">
+                                Sujeto a Garantía
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Form Actions -->
+                    <div class="form-actions">
+                        <button type="button" class="btn-secondary" id="saveDraftBtn">
+                            💾 Guardar Borrador
+                        </button>
+                        <button type="button" class="btn-secondary" id="previewBtn">
+                            👁️ Vista Previa
+                        </button>
+                        <button type="button" class="btn-primary" id="exportPdfBtn">
+                            📄 Exportar PDF
+                        </button>
+                    </div>
+                </form>
+            </section>
+
+            <!-- Preview Section -->
+            <section class="preview-container" id="previewContainer" style="display: none;">
+                <div class="preview-header">
+                    <h2>Vista Previa del Informe</h2>
+                    <button type="button" class="btn-close" id="closePreviewBtn">✕</button>
+                </div>
+                <div class="preview-content" id="previewContent">
+                    <!-- Report preview will be generated here -->
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+    <script src="js/validators.js"></script>
+    <script src="js/storage.js"></script>
+    <script src="js/calculator.js"></script>
+    <script src="js/imageHandler.js"></script>
+    <script src="js/contentGenerator.js"></script>
+    <script src="js/equipmentManager.js"></script>
+    <script src="js/formHandler.js"></script>
+    <script src="js/reportGenerator.js"></script>
+    <script src="js/pdfExporter.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
