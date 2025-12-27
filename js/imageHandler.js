@@ -56,8 +56,8 @@ const ImageHandler = {
 
             try {
                 const imageData = await this.readImageAsBase64(file);
-                this.addImage(imageType, imageData, file.name);
-                this.createPreview(previewContainer, imageData, file.name, imageType);
+                const imageId = this.addImage(imageType, imageData, file.name);
+                this.createPreview(previewContainer, imageData, file.name, imageType, imageId);
             } catch (error) {
                 console.error('❌ Error al cargar imagen:', error);
                 alert(`Error al cargar ${file.name}`);
@@ -124,6 +124,7 @@ const ImageHandler = {
         });
 
         console.log(`✅ Imagen agregada: ${fileName} (${imageType})`);
+        return imageId; // Return the imageId to avoid duplication
     },
 
     /**
@@ -132,11 +133,15 @@ const ImageHandler = {
      * @param {string} imageData - Base64 image data
      * @param {string} fileName - File name
      * @param {string} imageType - Image type
+     * @param {string} imageId - Image ID (optional, will generate if not provided)
      */
-    createPreview(container, imageData, fileName, imageType) {
+    createPreview(container, imageData, fileName, imageType, imageId = null) {
         if (!container) return;
 
-        const imageId = `${imageType}_${Date.now()}`;
+        // Use provided imageId or generate new one (for loading from saved data)
+        if (!imageId) {
+            imageId = `${imageType}_${Date.now()}`;
+        }
         const previewHTML = `
             <div class="image-preview" data-image-id="${imageId}">
                 <img src="${imageData}" alt="${fileName}">
@@ -232,7 +237,7 @@ const ImageHandler = {
             if (!previewContainer) return;
 
             images.forEach(image => {
-                this.createPreview(previewContainer, image.data, image.fileName, imageType);
+                this.createPreview(previewContainer, image.data, image.fileName, imageType, image.id);
             });
         });
 

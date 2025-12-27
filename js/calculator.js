@@ -16,25 +16,16 @@ const Calculator = {
 
     /**
      * Calculate total budget from all items
-     * IMPORTANT: Prices already include IGV (18%)
      * @param {Array} items - Array of budget items {quantity, price}
-     * @returns {Object} {subtotal, igv, total}
+     * @returns {Object} {total} - All prices in USD
      */
     calculateTotal(items) {
-        // Total is the sum of all items (prices already include IGV)
+        // Total is the sum of all items in USD
         const total = items.reduce((sum, item) => {
             return sum + this.calculateItemSubtotal(item.quantity, item.price);
         }, 0);
 
-        // Calculate implicit IGV and subtotal
-        // If total includes 18% IGV: total = subtotal * 1.18
-        // Therefore: subtotal = total / 1.18
-        const subtotal = total / 1.18;
-        const igv = total - subtotal;
-
         return {
-            subtotal: this.roundToTwo(subtotal),
-            igv: this.roundToTwo(igv),
             total: this.roundToTwo(total)
         };
     },
@@ -49,17 +40,28 @@ const Calculator = {
     },
 
     /**
-     * Format number as currency (Peruvian Soles)
+     * Format number as currency
      * @param {number} amount - Amount to format
+     * @param {string} currency - Currency code (USD or PEN)
      * @returns {string} Formatted currency string
      */
-    formatCurrency(amount) {
-        return `S/ ${this.roundToTwo(amount).toFixed(2)}`;
+    formatCurrency(amount, currency = 'USD') {
+        const symbol = currency === 'PEN' ? 'S/' : '$';
+        return `${symbol} ${this.roundToTwo(amount).toFixed(2)}`;
+    },
+
+    /**
+     * Get currency symbol
+     * @param {string} currency - Currency code (USD or PEN)
+     * @returns {string} Currency symbol
+     */
+    getCurrencySymbol(currency = 'USD') {
+        return currency === 'PEN' ? 'S/' : '$';
     },
 
     /**
      * Parse currency string to number
-     * @param {string} currencyStr - Currency string (e.g., "S/ 100.00")
+     * @param {string} currencyStr - Currency string (e.g., "$ 100.00")
      * @returns {number} Parsed number
      */
     parseCurrency(currencyStr) {
@@ -100,20 +102,16 @@ function updateBudgetDisplay(budgetItems) {
     }));
 
     const totals = Calculator.calculateTotal(items);
+    
+    // Get selected currency
+    const currencySelect = document.getElementById('currency');
+    const currency = currencySelect?.value || 'USD';
 
     // Update display elements
-    const subtotalDisplay = document.getElementById('subtotalDisplay');
-    const igvDisplay = document.getElementById('igvDisplay');
     const totalDisplay = document.getElementById('totalDisplay');
 
-    if (subtotalDisplay) {
-        subtotalDisplay.textContent = Calculator.formatCurrency(totals.subtotal);
-    }
-    if (igvDisplay) {
-        igvDisplay.textContent = Calculator.formatCurrency(totals.igv);
-    }
     if (totalDisplay) {
-        totalDisplay.textContent = Calculator.formatCurrency(totals.total);
+        totalDisplay.textContent = Calculator.formatCurrency(totals.total, currency);
     }
 
     return totals;
@@ -133,6 +131,10 @@ function updateItemSubtotal(itemElement) {
         const price = parseFloat(priceInput.value) || 0;
         const subtotal = Calculator.calculateItemSubtotal(quantity, price);
         
-        subtotalDisplay.textContent = Calculator.formatCurrency(subtotal);
+        // Get selected currency
+        const currencySelect = document.getElementById('currency');
+        const currency = currencySelect?.value || 'USD';
+        
+        subtotalDisplay.textContent = Calculator.formatCurrency(subtotal, currency);
     }
 }

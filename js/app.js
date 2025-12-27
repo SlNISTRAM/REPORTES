@@ -17,6 +17,15 @@ const App = {
         // Initialize image handler
         ImageHandler.init();
 
+        // Setup RUC auto-lookup
+        setupRUCLookup();
+        
+        // Setup document type handler
+        setupDocumentTypeHandler();
+        
+        // Setup currency handler
+        setupCurrencyHandler();
+
         // Setup button event listeners
         this.setupEventListeners();
 

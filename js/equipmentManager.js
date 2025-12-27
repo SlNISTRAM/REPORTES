@@ -59,7 +59,11 @@ const EquipmentManager = {
         // Setup remove button
         this.setupRemoveButton(equipmentId);
 
+        // Setup AI generation button
+        this.setupAIGenerationButton(equipmentId);
+
         console.log(`✅ Equipment ${itemNumber} added`);
+
     },
 
     /**
@@ -111,7 +115,23 @@ const EquipmentManager = {
                             </div>
                         </div>
 
+                        <!-- Equipment Intake Description -->
+                        <div class="input-group full-width">
+                            <label for="${equipmentId}_intakeDescription">
+                                📝 Descripción del Ingreso del Equipo
+                                <button type="button" class="btn-generate-ai" data-equipment-id="${equipmentId}" title="Generar descripción automática">
+                                    ✨ Generar con IA
+                                </button>
+                            </label>
+                            <textarea id="${equipmentId}_intakeDescription" 
+                                      name="${equipmentId}_intakeDescription" 
+                                      rows="4" 
+                                      placeholder="Descripción detallada del estado del equipo al momento del ingreso. Puede usar el botón 'Generar con IA' para crear una descripción automática basada en los datos ingresados.">${data?.intakeDescription || ''}</textarea>
+                            <small>Esta descripción aparecerá en el informe. Puede editarla manualmente o generarla automáticamente.</small>
+                        </div>
+
                         <!-- Imágenes de Ingreso -->
+
                         <div class="image-upload-section">
                             <label class="image-upload-label">
                                 📷 Fotos de Ingreso del Equipo
@@ -364,6 +384,24 @@ const EquipmentManager = {
 
                     <!-- Troubleshooting sections will be added dynamically if needed -->
                     <div id="${equipmentId}_troubleshooting_container"></div>
+
+                    <!-- Comprehensive AI Comments Section -->
+                    <div class="equipment-subsection" style="margin-top: var(--space-6); background: var(--primary-50); border: 2px solid var(--primary-300);">
+                        <h5 class="subsection-title" style="color: var(--primary-700);">📝 Comentarios Generales del Proceso</h5>
+                        <div class="input-group full-width">
+                            <label for="${equipmentId}_comprehensiveComments">
+                                Comentarios sobre todo el proceso realizado
+                                <button type="button" class="btn-generate-ai" data-equipment-id="${equipmentId}" data-type="comprehensive" title="Generar comentarios completos automáticamente" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);">
+                                    ✨ Generar Comentarios Completos
+                                </button>
+                            </label>
+                            <textarea id="${equipmentId}_comprehensiveComments" 
+                                      name="${equipmentId}_comprehensiveComments" 
+                                      rows="6" 
+                                      placeholder="Aquí se generarán comentarios completos sobre las lecturas iniciales, calibración y mantenimiento realizado. Use el botón 'Generar Comentarios Completos' para crear el texto automáticamente basado en todos los datos ingresados.">${data?.comprehensiveComments || ''}</textarea>
+                            <small style="color: var(--primary-700); font-weight: 500;">ℹ️ Estos comentarios engloban todo el proceso: lecturas iniciales, calibración y mantenimiento. Aparecerán en una sección dedicada del informe.</small>
+                        </div>
+                    </div>
                 </div>
             </div>
         `;
@@ -436,13 +474,9 @@ const EquipmentManager = {
      * Initialize image handlers for equipment
      */
     initializeEquipmentImageHandlers(equipmentId) {
-        const equipmentElement = document.getElementById(equipmentId);
-        if (!equipmentElement) return;
-
-        const imageInputs = equipmentElement.querySelectorAll('.image-upload-input');
-        imageInputs.forEach(input => {
-            ImageHandler.setupImageInput(input);
-        });
+        // Image handlers are already initialized globally by ImageHandler.init()
+        // No need to add duplicate listeners here
+        console.log(`✅ Image handlers ready for ${equipmentId}`);
     },
 
     /**
@@ -504,8 +538,99 @@ const EquipmentManager = {
     },
 
     /**
+     * Setup AI generation button
+     */
+    setupAIGenerationButton(equipmentId) {
+        // Use setTimeout to ensure DOM is fully ready
+        setTimeout(() => {
+            const generateBtns = document.querySelectorAll(`[data-equipment-id="${equipmentId}"].btn-generate-ai`);
+            
+            generateBtns.forEach(generateBtn => {
+                const type = generateBtn.dataset.type || 'intake'; // Default to intake for backward compatibility
+                
+                generateBtn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    
+                    // Get current equipment data
+                    const equipmentData = this.getEquipmentData(equipmentId);
+                    
+                    if (!equipmentData) {
+                        alert('⚠️ No se pudo obtener los datos del equipo');
+                        return;
+                    }
+                    
+                    // Generate description using ContentGenerator based on type
+                    if (typeof ContentGenerator !== 'undefined') {
+                        let description = '';
+                        let textareaId = '';
+                        
+                        switch(type) {
+                            case 'intake':
+                                if (ContentGenerator.generateEquipmentIntakeDescription) {
+                                    description = ContentGenerator.generateEquipmentIntakeDescription(equipmentData);
+                                    textareaId = `${equipmentId}_intakeDescription`;
+                                }
+                                break;
+                            case 'readings':
+                                if (ContentGenerator.generateInitialReadingsDescription) {
+                                    description = ContentGenerator.generateInitialReadingsDescription(equipmentData);
+                                    textareaId = `${equipmentId}_readingsDescription`;
+                                }
+                                break;
+                            case 'calibration':
+                                if (ContentGenerator.generateCalibrationDescription) {
+                                    description = ContentGenerator.generateCalibrationDescription(equipmentData);
+                                    textareaId = `${equipmentId}_calibrationDescription`;
+                                }
+                                break;
+                            case 'troubleshooting':
+                                if (ContentGenerator.generateTroubleshootingDescription) {
+                                    description = ContentGenerator.generateTroubleshootingDescription(equipmentData);
+                                    textareaId = `${equipmentId}_troubleshootingDescription`;
+                                }
+                                break;
+                            case 'comprehensive':
+                                if (ContentGenerator.generateComprehensiveComments) {
+                                    description = ContentGenerator.generateComprehensiveComments(equipmentData);
+                                    textareaId = `${equipmentId}_comprehensiveComments`;
+                                }
+                                break;
+                            default:
+                                alert('⚠️ Tipo de generación no reconocido');
+                                return;
+                        }
+                        
+                        if (description && textareaId) {
+                            // Set the generated text in the textarea
+                            const textarea = document.getElementById(textareaId);
+                            if (textarea) {
+                                textarea.value = description;
+                                
+                                // Add a visual feedback
+                                const originalText = generateBtn.textContent;
+                                generateBtn.textContent = '✅ Generado';
+                                setTimeout(() => {
+                                    generateBtn.textContent = originalText;
+                                }, 2000);
+                            }
+                        } else {
+                            alert('⚠️ No se pudo generar la descripción. Asegúrese de haber completado los campos necesarios.');
+                        }
+                    } else {
+                        alert('⚠️ El generador de contenido no está disponible');
+                    }
+                });
+            });
+            
+            console.log(`✅ AI generation buttons setup for ${equipmentId} (${generateBtns.length} buttons)`);
+        }, 100);
+    },
+
+    /**
      * Remove equipment entry
      */
+
     removeEquipment(equipmentId) {
         const element = document.getElementById(equipmentId);
         if (element) {
@@ -583,8 +708,10 @@ const EquipmentManager = {
             model: getData('model'),
             serial: getData('serial'),
             electrodeSerial: getData('electrodeSerial'),
+            intakeDescription: getData('intakeDescription'),
             powerOn: getData('powerOn'),
             batteryLevel: getData('batteryLevel'),
+
             screenStatus: getData('screenStatus'),
             buttonsStatus: getData('buttonsStatus'),
             phElectrodeStatus: getData('phElectrodeStatus'),
@@ -599,7 +726,8 @@ const EquipmentManager = {
             storageSolutionApplied: getData('storageSolutionApplied'),
             ph701Calibration: getData('ph701Calibration'),
             ph401Calibration: getData('ph401Calibration'),
-            ecCalibration: getData('ecCalibration')
+            ecCalibration: getData('ecCalibration'),
+            comprehensiveComments: getData('comprehensiveComments')
         };
     }
 };

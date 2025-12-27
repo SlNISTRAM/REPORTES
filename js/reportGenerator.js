@@ -13,13 +13,13 @@ const ReportGenerator = {
                 ${this.generateHeader(data)}
                 ${this.generateClientInfo(data)}
                 ${this.generateEquipmentInfo(data)}
-                ${this.generateInitialInspection(data)}
                 ${this.generateInitialReadings(data)}
                 ${this.generateCalibration(data)}
                 ${this.generateTroubleshooting(data)}
-                ${this.generateBudget(data)}
+                ${this.generateComprehensiveCommentsSection(data)}
                 ${this.generateConclusions(data)}
                 ${this.generateRecommendations(data)}
+                ${this.generateBudget(data)}
                 ${this.generateSignature(data)}
             </div>
         `;
@@ -42,30 +42,32 @@ const ReportGenerator = {
      * Generate client information section
      */
     generateClientInfo(data) {
+        const docTypeLabel = data.documentType === 'RUC' ? 'RUC' : 
+                            data.documentType === 'DNI' ? 'DNI' : 'CE';
+        const clientLabel = data.documentType === 'RUC' ? 'Razón Social' : 'Nombre Completo';
+        
         return `
             <div class="report-section">
                 <h2>1. Datos del Cliente</h2>
                 <div class="report-grid">
                     <div class="report-field">
-                        <div class="report-field-label">Razón Social</div>
-                        <div class="report-field-value">${this.escapeHtml(data.businessName || 'N/A')}</div>
+                        <div class="report-field-label">${clientLabel}</div>
+                        <div class="report-field-value">${this.escapeHtml(data.clientName || 'N/A')}</div>
                     </div>
                     <div class="report-field">
-                        <div class="report-field-label">RUC</div>
-                        <div class="report-field-value">${this.escapeHtml(data.ruc || 'N/A')}</div>
+                        <div class="report-field-label">${docTypeLabel}</div>
+                        <div class="report-field-value">${this.escapeHtml(data.documentNumber || 'N/A')}</div>
                     </div>
                     <div class="report-field">
                         <div class="report-field-label">Dirección</div>
                         <div class="report-field-value">${this.escapeHtml(data.address || 'N/A')}</div>
                     </div>
-                    <div class="report-field">
-                        <div class="report-field-label">Teléfono</div>
-                        <div class="report-field-value">${this.escapeHtml(data.phone || 'N/A')}</div>
-                    </div>
-                    <div class="report-field">
-                        <div class="report-field-label">Solicitante</div>
-                        <div class="report-field-value">${this.escapeHtml(data.contactName || 'N/A')}</div>
-                    </div>
+                    ${data.documentType === 'RUC' ? `
+                        <div class="report-field">
+                            <div class="report-field-label">Solicitante</div>
+                            <div class="report-field-value">${this.escapeHtml(data.contactName || 'N/A')}</div>
+                        </div>
+                    ` : ''}
                     <div class="report-field">
                         <div class="report-field-label">Correo Electrónico</div>
                         <div class="report-field-value">${this.escapeHtml(data.email || 'N/A')}</div>
@@ -79,7 +81,10 @@ const ReportGenerator = {
      * Generate equipment information section
      */
     generateEquipmentInfo(data) {
+        // Get first equipment from array (or use flat data for backwards compatibility)
+        const equipment = data.equipments && data.equipments.length > 0 ? data.equipments[0] : data;
         const intakeImages = this.getImages(data, 'equipment_intake');
+        const inspectionNarrative = this.generateInspectionNarrative(equipment);
         
         return `
             <div class="report-section">
@@ -87,19 +92,19 @@ const ReportGenerator = {
                 <div class="report-grid">
                     <div class="report-field">
                         <div class="report-field-label">Marca</div>
-                        <div class="report-field-value">${this.escapeHtml(data.brand || 'N/A')}</div>
+                        <div class="report-field-value">${this.escapeHtml(equipment.brand || 'N/A')}</div>
                     </div>
                     <div class="report-field">
                         <div class="report-field-label">Modelo</div>
-                        <div class="report-field-value">${this.escapeHtml(data.model || 'N/A')}</div>
+                        <div class="report-field-value">${this.escapeHtml(equipment.model || 'N/A')}</div>
                     </div>
                     <div class="report-field">
                         <div class="report-field-label">Serie del Equipo</div>
-                        <div class="report-field-value">${this.escapeHtml(data.serial || 'N/A')}</div>
+                        <div class="report-field-value">${this.escapeHtml(equipment.serial || 'N/A')}</div>
                     </div>
                     <div class="report-field">
                         <div class="report-field-label">Serie del Electrodo HI73127</div>
-                        <div class="report-field-value">${this.escapeHtml(data.electrodeSerial || 'N/A')}</div>
+                        <div class="report-field-value">${this.escapeHtml(equipment.electrodeSerial || 'N/A')}</div>
                     </div>
                 </div>
                 
@@ -111,54 +116,97 @@ const ReportGenerator = {
                         `).join('')}
                     </div>
                 ` : ''}
+                
+                ${inspectionNarrative ? `
+                    <h3 style="margin-top: 1.5rem;">Estado del Equipo al Ingreso</h3>
+                    <div style="background: var(--gray-50); padding: 1rem; border-radius: 8px; border-left: 4px solid var(--primary-500); font-size: 0.95rem; line-height: 1.8;">
+                        ${inspectionNarrative}
+                    </div>
+                ` : ''}
             </div>
         `;
     },
 
     /**
-     * Generate initial inspection section
+     * Generate narrative text from inspection data
      */
-    generateInitialInspection(data) {
-        return `
-            <div class="report-section">
-                <h2>3. Inspección Inicial</h2>
-                <table class="report-table">
-                    <tr>
-                        <td><strong>Equipo enciende</strong></td>
-                        <td>${data.powerOn === 'yes' ? '✅ Sí' : '❌ No'}</td>
-                    </tr>
-                    <tr>
-                        <td><strong>Nivel de Batería</strong></td>
-                        <td>${this.escapeHtml(data.batteryLevel || 'N/A')}</td>
-                    </tr>
-                    <tr>
-                        <td><strong>Estado de la Pantalla</strong></td>
-                        <td>${this.escapeHtml(data.screenStatus || 'N/A')}</td>
-                    </tr>
-                    <tr>
-                        <td><strong>Estado de los Botones</strong></td>
-                        <td>${this.escapeHtml(data.buttonsStatus || 'N/A')}</td>
-                    </tr>
-                    <tr>
-                        <td><strong>Estado del Electrodo de pH</strong></td>
-                        <td>${this.escapeHtml(data.phElectrodeStatus || 'N/A')}</td>
-                    </tr>
-                    <tr>
-                        <td><strong>Estado del Sensor de EC</strong></td>
-                        <td>${this.escapeHtml(data.ecSensorStatus || 'N/A')}</td>
-                    </tr>
-                    <tr>
-                        <td><strong>Estado del Sensor de Temperatura</strong></td>
-                        <td>${this.escapeHtml(data.tempSensorStatus || 'N/A')}</td>
-                    </tr>
-                    <tr>
-                        <td><strong>Solución de almacenamiento</strong></td>
-                        <td>${data.storageSolution === 'yes' ? '✅ Sí' : '❌ No'}</td>
-                    </tr>
-                </table>
-            </div>
-        `;
+    generateInspectionNarrative(equipment) {
+        if (!equipment) return '';
+        
+        // If there's a custom intake description, use it
+        if (equipment.intakeDescription && equipment.intakeDescription.trim()) {
+            return this.escapeHtml(equipment.intakeDescription);
+        }
+        
+        // Otherwise, generate automatic narrative
+        let narrative = [];
+        
+        // Power status
+        if (equipment.powerOn) {
+            narrative.push('El equipo enciende correctamente.');
+        } else {
+            narrative.push('El equipo no enciende.');
+        }
+        
+        // Battery level
+        if (equipment.batteryLevel) {
+            narrative.push(`Nivel de batería: ${equipment.batteryLevel.toLowerCase()}.`);
+        }
+        
+        // Screen status
+        if (equipment.screenStatus) {
+            const screenText = equipment.screenStatus === 'Bueno' 
+                ? 'La pantalla se encuentra en buen estado'
+                : `La pantalla presenta estado: ${equipment.screenStatus.toLowerCase()}`;
+            narrative.push(screenText + '.');
+        }
+        
+        // Buttons status
+        if (equipment.buttonsStatus) {
+            const buttonsText = equipment.buttonsStatus === 'Todos funcionan'
+                ? 'Todos los botones funcionan correctamente'
+                : equipment.buttonsStatus === 'Algunos no responden'
+                ? 'Algunos botones no responden'
+                : 'Los botones no funcionan';
+            narrative.push(buttonsText + '.');
+        }
+        
+        // pH Electrode status
+        if (equipment.phElectrodeStatus) {
+            const phText = equipment.phElectrodeStatus === 'Bueno'
+                ? 'El electrodo de pH se encuentra en buen estado'
+                : equipment.phElectrodeStatus === 'Requiere reemplazo'
+                ? 'El electrodo de pH requiere reemplazo'
+                : `El electrodo de pH está ${equipment.phElectrodeStatus.toLowerCase()}`;
+            narrative.push(phText + '.');
+        }
+        
+        // EC Sensor status
+        if (equipment.ecSensorStatus) {
+            const ecText = equipment.ecSensorStatus === 'Bueno'
+                ? 'El sensor de conductividad (EC) se encuentra en buen estado'
+                : `El sensor de conductividad (EC) está ${equipment.ecSensorStatus.toLowerCase()}`;
+            narrative.push(ecText + '.');
+        }
+        
+        // Temperature sensor status
+        if (equipment.tempSensorStatus) {
+            const tempText = equipment.tempSensorStatus === 'Conforme'
+                ? 'El sensor de temperatura está conforme'
+                : 'El sensor de temperatura no está conforme';
+            narrative.push(tempText + '.');
+        }
+        
+        // Storage solution
+        if (equipment.storageSolution) {
+            narrative.push('El electrodo llegó con solución de almacenamiento.');
+        } else {
+            narrative.push('El electrodo no llegó con solución de almacenamiento.');
+        }
+        
+        return narrative.join(' ');
     },
+
 
     /**
      * Generate initial readings section
@@ -174,7 +222,7 @@ const ReportGenerator = {
 
         return `
             <div class="report-section">
-                <h2>4. Lecturas Iniciales</h2>
+                <h2>3. Lecturas Iniciales</h2>
                 
                 <h3>Lecturas de pH</h3>
                 <table class="report-table">
@@ -269,7 +317,7 @@ const ReportGenerator = {
 
         return `
             <div class="report-section">
-                <h2>5. Limpieza y Calibración</h2>
+                <h2>4. Limpieza y Calibración</h2>
                 
                 <h3>Proceso de Limpieza</h3>
                 <ul>
@@ -365,7 +413,7 @@ const ReportGenerator = {
             
             html += `
                 <div class="report-section">
-                    <h2>6. Troubleshooting - Conductividad (EC)</h2>
+                    <h2>5. Troubleshooting - Conductividad (EC)</h2>
                     <p><strong>Acondicionamiento del sensor realizado:</strong> ${data.ecConditioningDone === 'yes' ? 'Sí' : 'No'}</p>
                     
                     ${data.ecPostConditioning ? `
@@ -388,7 +436,7 @@ const ReportGenerator = {
             
             html += `
                 <div class="report-section">
-                    <h2>7. Troubleshooting - pH</h2>
+                    <h2>6. Troubleshooting - pH</h2>
                     
                     ${data.phJuntaAdjusted === 'yes' ? `
                         <h3>Ajuste de Junta de Tela</h3>
@@ -440,15 +488,37 @@ const ReportGenerator = {
     },
 
     /**
+     * Generate comprehensive comments section
+     */
+    generateComprehensiveCommentsSection(data) {
+        // Get comprehensive comments from first equipment or from data directly
+        const equipment = data.equipments && data.equipments.length > 0 ? data.equipments[0] : data;
+        const comments = equipment.comprehensiveComments;
+        
+        if (!comments) return '';
+        
+        return `
+            <div class="report-section">
+                <h2>Comentarios del Proceso</h2>
+                <div style="background: var(--primary-50); padding: 1.5rem; border-radius: 8px; border-left: 4px solid var(--primary-600); font-size: 0.95rem; line-height: 1.8; white-space: pre-line;">
+                    ${this.escapeHtml(comments)}
+                </div>
+            </div>
+        `;
+    },
+
+    /**
      * Generate budget section
      */
     generateBudget(data) {
+        const currency = data.currency || 'USD';
+        
         const budgetRows = data.budgetItems?.map(item => `
             <tr>
                 <td>${this.escapeHtml(item.description)}</td>
                 <td style="text-align: center;">${item.quantity}</td>
-                <td style="text-align: right;">${Calculator.formatCurrency(item.price)}</td>
-                <td style="text-align: right;">${Calculator.formatCurrency(item.subtotal)}</td>
+                <td style="text-align: right;">${Calculator.formatCurrency(item.price, currency)}</td>
+                <td style="text-align: right;">${Calculator.formatCurrency(item.subtotal, currency)}</td>
             </tr>
         `).join('') || '<tr><td colspan="4" style="text-align: center;">No hay ítems en el presupuesto</td></tr>';
 
@@ -456,14 +526,13 @@ const ReportGenerator = {
 
         return `
             <div class="report-section">
-                <h2>8. Presupuesto</h2>
-                <p class="info-note"><strong>Nota:</strong> Los precios incluyen IGV (18%)</p>
+                <h2>10. Presupuesto</h2>
                 <table class="report-table">
                     <thead>
                         <tr>
                             <th>Descripción</th>
                             <th style="text-align: center;">Cantidad</th>
-                            <th style="text-align: right;">Precio Unit. (inc. IGV)</th>
+                            <th style="text-align: right;">Precio Unit.</th>
                             <th style="text-align: right;">Subtotal</th>
                         </tr>
                     </thead>
@@ -471,17 +540,9 @@ const ReportGenerator = {
                         ${budgetRows}
                     </tbody>
                     <tfoot>
-                        <tr>
-                            <td colspan="3" style="text-align: right; font-weight: bold;">Total (inc. IGV):</td>
-                            <td style="text-align: right; font-weight: bold;">${Calculator.formatCurrency(data.total || 0)}</td>
-                        </tr>
-                        <tr>
-                            <td colspan="3" style="text-align: right; font-weight: bold;">IGV (18%):</td>
-                            <td style="text-align: right; font-weight: bold;">${Calculator.formatCurrency(data.igv || 0)}</td>
-                        </tr>
                         <tr style="background: var(--primary-50);">
-                            <td colspan="3" style="text-align: right; font-weight: bold; font-size: 1.1em;">Subtotal:</td>
-                            <td style="text-align: right; font-weight: bold; font-size: 1.1em; color: var(--primary-700);">${Calculator.formatCurrency(data.subtotal || 0)}</td>
+                            <td colspan="3" style="text-align: right; font-weight: bold; font-size: 1.1em;">TOTAL:</td>
+                            <td style="text-align: right; font-weight: bold; font-size: 1.1em; color: var(--primary-700);">${Calculator.formatCurrency(data.total || 0, currency)}</td>
                         </tr>
                     </tfoot>
                 </table>
@@ -497,7 +558,7 @@ const ReportGenerator = {
         const conclusions = this.generateAutomaticConclusions(data);
         return `
             <div class="report-section">
-                <h2>9. Conclusiones</h2>
+                <h2>8. Conclusiones</h2>
                 <p>${conclusions}</p>
             </div>
         `;
@@ -567,7 +628,7 @@ const ReportGenerator = {
 
         let recommendations = `
             <div class="report-section">
-                <h2>10. Recomendaciones</h2>
+                <h2>9. Recomendaciones</h2>
                 <ul>
                     <li><strong>Mantenimiento Preventivo:</strong> Realizar limpieza de electrodos después de cada uso con agua destilada.</li>
                     <li><strong>Almacenamiento:</strong> Mantener el electrodo de pH en solución de almacenamiento KCl 3M cuando no esté en uso.</li>
@@ -673,6 +734,9 @@ function showReportPreview() {
 
     const formData = FormHandler.getFormData();
     formData.images = ImageHandler.getAllImages();
+    
+    // Add equipment data from EquipmentManager
+    formData.equipments = EquipmentManager.getAllEquipmentData();
     
     const reportHTML = ReportGenerator.generateReport(formData);
     

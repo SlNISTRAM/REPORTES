@@ -253,8 +253,6 @@ const FormHandler = {
 
         // Calculate totals
         const totals = Calculator.calculateTotal(data.budgetItems);
-        data.subtotal = totals.subtotal;
-        data.igv = totals.igv;
         data.total = totals.total;
 
         return data;
