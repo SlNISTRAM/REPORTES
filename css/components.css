@@ -722,11 +722,13 @@ label:has(input[required])::before {
 .validation-result {
     display: flex;
     align-items: center;
-    gap: var(--space-2);
-    padding: var(--space-3);
+    gap: var(--space-3);
+    padding: var(--space-4);
     border-radius: var(--radius-md);
-    font-size: var(--text-sm);
-    margin-top: var(--space-2);
+    font-size: var(--text-base);
+    margin-top: var(--space-3);
+    font-weight: var(--font-medium);
+    transition: all var(--transition-base);
 }
 
 .validation-result.valid {
@@ -735,23 +737,44 @@ label:has(input[required])::before {
 }
 
 .validation-result.invalid {
-    background: var(--error-light);
-    border: 2px solid var(--error);
+    background: #fee;
+    border: 3px solid var(--error);
+    animation: pulseWarning 2s ease-in-out infinite;
+    box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1);
+}
+
+@keyframes pulseWarning {
+    0%, 100% {
+        box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1);
+    }
+    50% {
+        box-shadow: 0 0 0 6px rgba(220, 38, 38, 0.2);
+    }
 }
 
 .validation-icon {
-    font-size: var(--text-lg);
+    font-size: var(--text-2xl);
 }
 
 .validation-status {
-    font-weight: var(--font-semibold);
+    font-weight: var(--font-bold);
     color: var(--gray-900);
+    font-size: var(--text-base);
+}
+
+.validation-result.invalid .validation-status {
+    color: var(--error-dark);
 }
 
 .validation-range {
-    color: var(--gray-600);
-    font-size: var(--text-xs);
+    color: var(--gray-700);
+    font-size: var(--text-sm);
     margin-left: auto;
+    font-weight: var(--font-medium);
+}
+
+.validation-result.invalid .validation-range {
+    color: var(--error-dark);
 }
 
 .validation-badge {
@@ -781,12 +804,22 @@ label:has(input[required])::before {
 .input-group.valid textarea,
 .input-group.valid select {
     border-color: var(--success);
+    background: #f0fdf4;
 }
 
 .input-group.invalid input,
 .input-group.invalid textarea,
 .input-group.invalid select {
     border-color: var(--error);
+    border-width: 2px;
+    background: #fef2f2;
+    animation: shakeInput 0.5s ease-in-out;
+}
+
+@keyframes shakeInput {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-5px); }
+    75% { transform: translateX(5px); }
 }
 
 /* ===== Conditional Sections ===== */
@@ -1078,4 +1111,82 @@ label:has(input[required])::before {
         align-items: stretch;
         gap: var(--space-3);
     }
+}
+
+/* ===== RUC Status Indicators ===== */
+.ruc-status {
+    margin-top: var(--space-2);
+    font-size: var(--text-sm);
+    font-weight: var(--font-medium);
+}
+
+.status-active {
+    color: var(--success-dark);
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-1);
+}
+
+.status-inactive {
+    color: var(--warning-dark);
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-1);
+}
+
+.status-loading {
+    color: var(--primary-600);
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-1);
+    animation: pulse 1.5s ease-in-out infinite;
+}
+
+.status-error {
+    color: var(--error-dark);
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-1);
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+
+/* ===== AI Generation Button ===== */
+.btn-generate-ai {
+    background: linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%);
+    color: var(--white);
+    border: none;
+    padding: var(--space-2) var(--space-4);
+    border-radius: var(--radius-md);
+    font-size: var(--text-sm);
+    font-weight: var(--font-medium);
+    cursor: pointer;
+    transition: all var(--transition-base);
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    margin-left: var(--space-3);
+    box-shadow: 0 2px 4px rgba(139, 92, 246, 0.2);
+}
+
+.btn-generate-ai:hover {
+    background: linear-gradient(135deg, #7c3aed 0%, #4f46e5 100%);
+    box-shadow: 0 4px 8px rgba(139, 92, 246, 0.3);
+    transform: translateY(-1px);
+}
+
+.btn-generate-ai:active {
+    transform: translateY(0);
+    box-shadow: 0 1px 2px rgba(139, 92, 246, 0.2);
+}
+
+/* Label with AI button */
+.input-group label:has(.btn-generate-ai) {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
 }
